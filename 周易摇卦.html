@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>周易摇卦</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"PingFang SC","Microsoft YaHei",sans-serif;background:#0f1420;color:#e8e4d8;min-height:100vh;padding:24px 16px 48px}
+.wrap{max-width:560px;margin:0 auto}
+h1{text-align:center;font-size:26px;letter-spacing:4px;margin-bottom:4px;color:#c9a86a}
+.sub{text-align:center;font-size:13px;color:#8a8a8a;letter-spacing:2px;margin-bottom:24px}
+.ask{background:rgba(201,168,106,.08);border:1px solid rgba(201,168,106,.2);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:14px;color:#d4c49a;line-height:1.7}
+.qbox{margin-bottom:16px}
+.qbox input{width:100%;padding:14px 18px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#e8e4d8;font-size:15px;outline:none;transition:border .2s}
+.qbox input:focus{border-color:rgba(201,168,106,.5)}
+.qbox input::placeholder{color:#666}
+#btn{display:block;width:100%;padding:16px;background:linear-gradient(135deg,#c9a86a,#a8843c);color:#1a1a1a;font-size:18px;font-weight:700;letter-spacing:3px;border:none;border-radius:12px;cursor:pointer;transition:transform .15s,opacity .2s;box-shadow:0 4px 20px rgba(201,168,106,.3)}
+#btn:active{transform:scale(.97)}
+#btn:disabled{opacity:.5;pointer-events:none}
+#jie{display:none;width:100%;padding:16px;background:linear-gradient(135deg,#5c7a6e,#3d5a4e);color:#e8e4d8;font-size:18px;font-weight:700;letter-spacing:3px;border:none;border-radius:12px;cursor:pointer;transition:transform .15s,opacity .2s;box-shadow:0 4px 20px rgba(92,122,110,.3);margin:20px 0}
+#jie.show{display:block}
+#jie:active{transform:scale(.97)}
+#coins{margin:20px auto 0;text-align:center;opacity:0;transition:opacity .3s}
+#coins.show{opacity:1}
+.coinrow{display:flex;gap:10px;justify-content:center;margin-bottom:8px}
+.coin{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.coin.b{background:linear-gradient(135deg,#c9a86a,#a8843c);color:#1a1a1a}
+.coin.z{background:rgba(255,255,255,.12);color:#aaa;border:1px solid rgba(255,255,255,.15)}
+.cointxt{font-size:13px;color:#8a8a8a;min-height:20px}
+#out{margin-top:24px}
+.panels{display:flex;gap:12px;align-items:center;justify-content:center;margin-bottom:20px}
+.panel{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px 12px;flex:1;max-width:140px;text-align:center}
+.ptitle{font-size:12px;color:#8a8a8a;letter-spacing:2px;margin-bottom:10px}
+.gua{display:flex;flex-direction:column-reverse;gap:3px;align-items:center;margin-bottom:10px}
+.yao{display:flex;gap:2px}
+.yao i{display:inline-block;width:32px;height:9px;border-radius:1px;background:#d4c49a}
+.yao.mv i{background:#c9a86a;box-shadow:0 0 6px rgba(201,168,106,.5)}
+.yao.sm i{width:26px;height:7px}
+.gname{font-size:18px;font-weight:700;color:#c9a86a;margin-bottom:4px}
+.gnote{font-size:12px;color:#8a8a8a}
+.arrow{font-size:20px;color:#555}
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px 18px;margin-bottom:12px}
+.card h3{font-size:13px;color:#c9a86a;letter-spacing:2px;margin-bottom:8px}
+.card p{font-size:14px;line-height:1.8;color:#d4d0c4}
+.card .xiang{color:#a89e8a;font-style:italic}
+.card.hi{border-color:rgba(201,168,106,.3);background:rgba(201,168,106,.06)}
+.mvp{font-size:13px;margin-bottom:6px;color:#c4b898}
+.gn{font-size:15px;font-weight:700;color:#c9a86a;margin-bottom:6px}
+.end{text-align:center;font-size:12px;color:#555;margin-top:24px;letter-spacing:1px}
+@media(max-width:480px){
+  .panels{flex-direction:column;gap:8px}
+  .panel{max-width:100%}
+  .arrow{transform:rotate(90deg)}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>周易摇卦</h1>
+  <div class="sub">三枚铜钱 · 六爻成卦</div>
+
+  <div class="qbox">
+    <input id="q" type="text" placeholder="心中默念所问之事（可选）" maxlength="50">
+  </div>
+
+  <button id="btn">摇 卦</button>
+
+  <div id="coins"></div>
+  <div id="out"></div>
+
+  <button id="jie">解 卦</button>
+  <div id="jieOut"></div>
+</div>
+
+<script>
+// 六十四卦权威数据：序号与 King Wen 序严格一致
+// q 卦名 / s 卦辞 / x 象辞 / j 白话解
+const GUA = [
+{q:"乾",s:"元亨利贞。",x:"天行健，君子以自强不息。",j:"六爻纯阳，刚健中正，是最有力量的一卦。宜主动出击、开拓进取，运势正盛。但满则溢，切忌刚愎自用。"},
+{q:"坤",s:"元亨，利牝马之贞。",x:"地势坤，君子以厚德载物。",j:"六爻纯阴，厚德承载。宜配合、辅佐、积累，不宜争先。以柔克刚，顺时而行自有结果。"},
+{q:"屯",s:"元亨利贞，勿用有攸往，利建侯。",x:"云雷屯，君子以经纶。",j:"万物初生，破土最难。眼下处处受阻是常态，不是凶兆。宜稳住阵脚、广结帮手，别急着推进。"},
+{q:"蒙",s:"亨。匪我求童蒙，童蒙求我。",x:"山下出泉，君子以果行育德。",j:"蒙昧未开之象。与其硬闯，不如去问、去学。放下身段请教内行人，答案比你想的容易拿到。"},
+{q:"需",s:"有孚，光亨，贞吉，利涉大川。",x:"云上于天，君子以饮食宴乐。",j:"险在前方，时机未到。等待不是消极，是养精蓄锐。该吃吃该睡睡，时机一到自然水到渠成。"},
+{q:"讼",s:"有孚窒惕，中吉，终凶。",x:"天与水违行，君子以作事谋始。",j:"争端已起，赢了也是输。宜及早抽身、退让一步。真正该做的是回头检查：这纠纷最初是怎么埋下的。"},
+{q:"师",s:"贞，丈人吉，无咎。",x:"地中有水，君子以容民畜众。",j:"兴师动众之象。做成大事须有威望的人牵头，令出必行。若自己不是那个角色，就找对那个人。"},
+{q:"比",s:"吉。原筮元永贞，无咎。",x:"地上有水，先王以建万国，亲诸侯。",j:"亲附相依之象，大吉。宜结盟、抱团、择善而从。但要选对人：跟强者同行，跟错人比独行更糟。"},
+{q:"小畜",s:"亨。密云不雨，自我西郊。",x:"风行天上，君子以懿文德。",j:"乌云密布却不下雨，力量还小。别急着变现，此时该做的是打磨自己，蓄够了自然落雨。"},
+{q:"履",s:"履虎尾，不咥人，亨。",x:"上天下泽，君子以辨上下，定民志。",j:"踩到老虎尾巴却没被咬，靠的是分寸。处境凶险但可控，守礼、守规矩、别越线，就能平安过关。"},
+{q:"泰",s:"小往大来，吉亨。",x:"天地交泰，后以财成天地之道。",j:"天地交感，上下通泰，是最顺的一卦。付出小、回报大。正是动手做事的时候，别浪费这段窗口期。"},
+{q:"否",s:"否之匪人，不利君子贞，大往小来。",x:"天地不交，君子以俭德辟难。",j:"天地不交，闭塞不通。此时越努力越亏，宜收手、节流、隐忍。守住底线，等局面自己翻。"},
+{q:"同人",s:"同人于野，亨，利涉大川。",x:"天与火，君子以类族辨物。",j:"与人同心，其利断金。放下小圈子，去更开阔的地方找同路人，大事可成。"},
+{q:"大有",s:"元亨。",x:"火在天上，君子以遏恶扬善。",j:"大有所获，丰盛之象。收获正当时，但盛极需谦。此时最忌炫耀，闷声守住才叫真有。"},
+{q:"谦",s:"亨，君子有终。",x:"地中有山，君子以裒多益寡。",j:"高山藏于地下，谦德之卦，六爻皆吉。放低身段反而走得远，这是唯一一个没有凶爻的卦。"},
+{q:"豫",s:"利建侯行师。",x:"雷出地奋，先王以作乐崇德。",j:"安和乐利之象。适合造势、动员、把事情张罗起来。但安逸中要留个心眼，乐极往往生悲。"},
+{q:"随",s:"元亨利贞，无咎。",x:"泽中有雷，君子以向晦入宴息。",j:"随顺时势之卦。既然大势如此，顺势而为比硬扛省力得多。但随的是正道，不是随波逐流。"},
+{q:"蛊",s:"元亨，利涉大川。",x:"山下有风，君子以振民育德。",j:"器皿生虫，积弊已久。这是需要整顿的卦。旧账迟早要还，早动手比晚动手代价小。"},
+{q:"临",s:"元亨利贞。至于八月有凶。",x:"泽上有地，君子以教思无穷。",j:"居高临下，正是得势之时。宜宽厚待人、向下施恩。但提醒你：八月有凶，好日子有期限。"},
+{q:"观",s:"盥而不荐，有孚颙若。",x:"风行地上，先王以省方观民设教。",j:"观察与被观察之卦。此时宜静不宜动，多看看别人怎么做，也留意自己正被别人看着。"},
+{q:"噬嗑",s:"亨，利用狱。",x:"雷电，君子以明罚敕法。",j:"口中有物，咬断才通。有障碍挡路，必须果断处理。该翻脸翻脸，该立规矩立规矩，含糊只会更糟。"},
+{q:"贲",s:"亨，小利有攸往。",x:"山下有火，君子以明庶政，无敢折狱。",j:"装饰之美，锦上添花之象。适合包装、修饰、做形式上的加分，但别指望靠表面功夫解决根本问题。"},
+{q:"剥",s:"不利有攸往。",x:"山附于地，上以厚下安宅。",j:"山石剥落，衰败之象。此时不宜有所行动，宜收缩、止损、保本。守住仅剩的，别做任何冒险的决定。"},
+{q:"复",s:"亨。出入无疾，朋来无咎。",x:"雷在地中，先王以至日闭关。",j:"一阳来复，否极泰来。最难的时候已经过去，转机刚刚冒头。别声张，让它慢慢长。"},
+{q:"无妄",s:"元亨利贞。其匪正有眚，不利有攸往。",x:"天下雷行，物与无妄。",j:"不妄为之卦。守本分、做该做的事，吉；起歪心思、想走捷径，凶。这一卦专治投机。"},
+{q:"大畜",s:"利贞，不家食吉，利涉大川。",x:"天在山中，君子以多识前言往行。",j:"大有蓄积之卦。力量、学识、资源都攒够了，可以出山了。此前所有的沉淀，现在开始兑现。"},
+{q:"颐",s:"贞吉。观颐，自求口实。",x:"山下有雷，君子以慎言语，节饮食。",j:"山雷颐，上山下雷。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"大过",s:"栋桡，利有攸往，亨。",x:"泽灭木，君子以独立不惧，遁世无闷。",j:"泽风大过，上泽下风。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"坎",s:"习坎，有孚，维心亨，行有尚。",x:"水洊至，君子以常德行，习教事。",j:"重重险陷，如涉深水。宜持守正道、循序渐进，不可轻举妄动。行险而不失其亨，方能脱困。"},
+{q:"离",s:"利贞，亨。畜牝牛，吉。",x:"明两作离，大人以继明照于四方。",j:"光明依附，如日月附天。宜有所依托、依附正道。附丽得当则通明，所附不正则两伤。"},
+{q:"咸",s:"亨，利贞，取女吉。",x:"山上有泽，君子以虚受人。",j:"泽山咸，上泽下山。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"恒",s:"亨，无咎，利贞，利有攸往。",x:"雷风，君子以立不易方。",j:"雷风恒，上雷下风。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"遁",s:"亨，小利贞。",x:"天下有山，君子以远小人，不恶而严。",j:"天山遁，上天下山。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"大壮",s:"利贞。",x:"雷在天上，君子以非礼弗履。",j:"雷天大壮，上雷下天。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"晋",s:"康侯用锡马蕃庶，昼日三接。",x:"明出地上，君子以自昭明德。",j:"火地晋，上火下地。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"明夷",s:"利艰贞。",x:"明入地中，君子以莅众，用晦而明。",j:"地火明夷，上地下火。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"家人",s:"利女贞。",x:"风自火出，君子以言有物，而行有恒。",j:"风火家人，上风下火。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"睽",s:"小事吉。",x:"上火下泽，君子以同而异。",j:"火泽睽，上火下泽。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"蹇",s:"利西南，不利东北。利见大人，贞吉。",x:"山上有水，君子以反身修德。",j:"水山蹇，上水下山。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"解",s:"利西南，无所往，其来复吉。有攸往，夙吉。",x:"雷雨作，君子以赦过宥罪。",j:"雷水解，上雷下水。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"损",s:"有孚，元吉，无咎，可贞，利有攸向。",x:"山下有泽，君子以惩忿窒欲。",j:"山泽损，上山下泽。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"益",s:"利有攸往，利涉大川。",x:"风雷，君子以见善则迁，有过则改。",j:"风雷益，上风下雷。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"夬",s:"扬于王庭，孚号有厉。告自邑，不利即戎，利有攸往。",x:"泽上于天，君子以施禄及下，居德则忌。",j:"泽天夬，上泽下天。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"姤",s:"女壮，勿用取女。",x:"天下有风，后以施命诰四方。",j:"天风姤，上天下风。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"萃",s:"亨。王假有庙，利见大人，亨，利贞。",x:"泽上于地，君子以除戎器，戒不虞。",j:"泽地萃，上泽下地。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"升",s:"元亨，用见大人，勿恤，南征吉。",x:"地中生木，君子以顺德，积小以高大。",j:"地风升，上地下风。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"困",s:"亨，贞，大人吉，无咎。",x:"泽无水，君子以致命遂志。",j:"泽水困，上泽下水。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"井",s:"改邑不改井，无丧无得，往来井井。",x:"木上有水，君子以劳民劝相。",j:"水风井，上水下风。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"革",s:"己日乃孚，元亨利贞，悔亡。",x:"泽中有火，君子以治历明时。",j:"泽火革，上泽下火。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"鼎",s:"元吉，亨。",x:"木上有火，君子以正位凝命。",j:"火风鼎，上火下风。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"震",s:"亨。震来虩虩，笑言哑哑。",x:"洊雷，君子以恐惧修省。",j:"雷动之象，震动而奋发。宜有备无患，临危不乱。先震惊而后安然，是成长必经之路。"},
+{q:"艮",s:"艮其背，不获其身，行其庭，不见其人，无咎。",x:"兼山，君子以思不出其位。",j:"静止之象，稳如泰山。宜安守本分、不可妄动。时止则止，知止而后有定。"},
+{q:"渐",s:"女归吉，利贞。",x:"山上有木，君子以居贤德善俗。",j:"风山渐，上风下山。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"归妹",s:"征凶，无攸利。",x:"泽上有雷，君子以永终知敝。",j:"雷泽归妹，上雷下泽。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"丰",s:"亨，王假之，勿忧，宜日中。",x:"雷电皆至，君子以折狱致刑。",j:"雷火丰，上雷下火。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"旅",s:"小亨，旅贞吉。",x:"山上有火，君子以明慎用刑，而不留狱。",j:"火山旅，上火下山。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"巽",s:"小亨，利有攸往，利见大人。",x:"随风巽，君子以申命行事。",j:"风行之象，无孔不入。宜顺势而动、随风潜入。柔而能刚，以小博大，正是此卦精义。"},
+{q:"兑",s:"亨，利贞。",x:"丽泽，君子以朋友讲习。",j:"喜悦之象，朋友讲习。宜和悦待人、广结善缘。和则多助，孤则寡援。"},
+{q:"涣",s:"亨。王假有庙，利涉大川，利贞。",x:"风行水上，先王以享于帝立庙。",j:"风水涣，上风下水。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"节",s:"亨。苦节不可贞。",x:"泽上有水，君子以制数度，议德行。",j:"水泽节，上水下泽。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"中孚",s:"豚鱼吉，利涉大川，利贞。",x:"泽上有风，君子以议狱缓死。",j:"风泽中孚，上风下泽。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"小过",s:"亨，利贞，可小事，不可大事。",x:"山上有雷，君子以行过乎恭，丧过乎哀，用过乎俭。",j:"雷山小过，上雷下山。上卦主外、下卦主内，宜审时度势、顺时而动。"},
+{q:"既济",s:"亨，小利贞，初吉终乱。",x:"水在火上，君子以思患而豫防之。",j:"事已成之象，初吉终乱。开局虽顺，收尾宜慎。功成身退，或未雨绸缪。"},
+{q:"未济",s:"亨，小狐汔济，濡其尾，无攸利。",x:"火在水上，君子以慎辨物居方。",j:"事未成之象，时机未到。宜慎终如始、稳步推进。结尾难收，好戏在后头。"},
+];
+</script>
+<script>
+// 周易摇卦 · 前端逻辑
+// 三枚铜钱，背为阳：3背=老阳9，2背=少阳7，1背=少阴8，0背=老阴6
+// 卦象查表：行=下卦，列=上卦，八卦顺序 乾兑离震巽坎艮坤
+
+const ORDER = ["乾", "兑", "离", "震", "巽", "坎", "艮", "坤"];
+const RAW = {
+  乾: [1, 43, 14, 34, 9, 5, 26, 11],
+  兑: [10, 58, 38, 54, 61, 60, 41, 19],
+  离: [13, 49, 30, 55, 37, 63, 22, 36],
+  震: [25, 17, 21, 51, 42, 3, 27, 24],
+  巽: [44, 28, 50, 32, 57, 48, 18, 46],
+  坎: [6, 47, 64, 40, 59, 29, 4, 7],
+  艮: [33, 31, 56, 62, 53, 39, 52, 15],
+  坤: [12, 45, 35, 16, 20, 8, 23, 2]
+};
+const TRI = ["坤", "艮", "坎", "巽", "震", "离", "兑", "乾"]; // index = 初*4+二*2+三
+const IMG = { 乾: "天", 兑: "泽", 离: "火", 震: "雷", 巽: "风", 坎: "水", 艮: "山", 坤: "地" };
+const YAO_TIP = ["初爻，事之始。起步阶段，宜稳不宜快。",
+  "二爻，居中得位。守中道，可获助力。",
+  "三爻，上下交界。进退两难，最易出岔子。",
+  "四爻，逼近核心。位高责重，言行需谨慎。",
+  "五爻，尊位得中。多半是吉，可放手施为。",
+  "上爻，事之终。过犹不及，亢则有悔。"];
+
+// 行=下卦，列=上卦
+function lookup(upper, lower) { return RAW[lower][ORDER.indexOf(upper)]; }
+
+console.assert(lookup("乾", "乾") === 1 && lookup("坤", "坤") === 2 &&
+  lookup("坤", "乾") === 11 && lookup("乾", "坤") === 12 &&
+  lookup("坎", "震") === 3 && lookup("坎", "离") === 63 &&
+  lookup("离", "坎") === 64 && lookup("震", "艮") === 62, "卦表有误");
+
+// 六爻（初爻在下）→ 上下卦名与查表序号
+function hexInfo(lines) {
+  const lv = lines[0] * 4 + lines[1] * 2 + lines[2];
+  const uv = lines[3] * 4 + lines[4] * 2 + lines[5];
+  const lower = TRI[lv], upper = TRI[uv];
+  const no = lookup(upper, lower);
+  const name = upper === lower ? `${upper}为${IMG[upper]}` : `${IMG[upper]}${IMG[lower]}${GUA[no - 1].q}`;
+  return { lower, upper, no, name, data: GUA[no - 1] };
+}
+
+function toss() {
+  let backs = 0;
+  const coins = [0, 1, 2].map(() => { const b = Math.random() < 0.5 ? 1 : 0; backs += b; return b; });
+  const val = [6, 8, 7, 9][backs];
+  return { val, coins, yang: val === 7 || val === 9, moving: val === 6 || val === 9 };
+}
+
+const $ = s => document.querySelector(s);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// 当前卦的状态（摇完保存，解卦时用）
+let cur = null;
+
+function yaoHtml(yang, moving, small) {
+  const h = small ? 7 : 11;
+  const cls = "yao" + (moving ? " mv" : "") + (small ? " sm" : "");
+  const bar = `<i style="height:${h}px"></i>`;
+  return `<div class="${cls}">${yang ? bar : bar + bar}</div>`;
+}
+
+async function divinate() {
+  const btn = $("#btn"), jie = $("#jie"), out = $("#out"), coins = $("#coins");
+  const question = $("#q").value.trim();
+  btn.disabled = true;
+  jie.classList.remove("show");
+  out.innerHTML = "";
+  cur = null;
+  const lines = [], moves = [], all = [];
+  for (let i = 0; i < 6; i++) {
+    const t = toss();
+    all.push(t);
+    lines.push(t.moving ? 1 - (t.yang ? 1 : 0) : (t.yang ? 1 : 0));
+    if (t.moving) moves.push({ pos: i, was: t.yang });
+    coins.innerHTML = `<div class="coinrow">${t.coins.map(b =>
+      `<span class="coin ${b ? "b" : "z"}">${b ? "背" : "字"}</span>`).join("")}</div>
+      <div class="cointxt">第 ${i + 1} 爻 · ${["老阴","少阳","少阴","老阳"][t.val === 6 ? 0 : t.val === 7 ? 1 : t.val === 8 ? 2 : 3]}${t.moving ? "（动）" : ""}</div>`;
+    coins.classList.add("show");
+    await sleep(260);
+  }
+  cur = { all, lines, moves, question };
+  renderGua();
+  btn.disabled = false;
+}
+
+function renderGua() {
+  const ben = hexInfo(cur.lines);
+  const hasMove = cur.moves.length > 0;
+  let html = cur.question ? `<div class="ask">所问：${cur.question}</div>` : "";
+  html += `<div class="panels">`;
+  html += `<div class="panel">
+    <div class="ptitle">本卦 · 现状</div>
+    <div class="gua">${[5, 4, 3, 2, 1, 0].map(i =>
+      yaoHtml(cur.all[i].yang, cur.all[i].moving, false)).join("")}</div>
+    <div class="gname">${ben.name}</div>
+  </div>`;
+  if (hasMove) {
+    const bx = hexInfo(cur.lines.map((v, i) => cur.moves.some(m => m.pos === i) ? 1 - v : v));
+    html += `<div class="arrow">→</div>`;
+    html += `<div class="panel">
+      <div class="ptitle">变卦 · 趋势</div>
+      <div class="gua">${[5, 4, 3, 2, 1, 0].map(i =>
+        yaoHtml(cur.lines[i] === 1, false, true)).join("")}</div>
+      <div class="gname">${bx.name}</div>
+    </div>`;
+  }
+  html += `</div>`;
+  $("#out").innerHTML = html;
+  const jie = $("#jie");
+  jie.classList.add("show");
+  jie.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderJie() {
+  if (!cur) return;
+  const ben = hexInfo(cur.lines);
+  const hasMove = cur.moves.length > 0;
+  let html = "";
+  html += `<div class="card"><h3>卦辞</h3><p>${ben.data.s}</p></div>`;
+  html += `<div class="card"><h3>象曰</h3><p class="xiang">${ben.data.x}</p></div>`;
+  html += `<div class="card hi"><h3>解卦</h3><p>${ben.data.j}</p></div>`;
+
+  if (hasMove) {
+    html += `<div class="card"><h3>动爻 · ${cur.moves.length} 爻动</h3>` +
+      cur.moves.map(m => `<p class="mvp">第 ${m.pos + 1} 爻（${"初二三四五上"[m.pos]}爻）：${YAO_TIP[m.pos]}</p>`).join("") + `</div>`;
+    const bx = hexInfo(cur.lines.map((v, i) => cur.moves.some(m => m.pos === i) ? 1 - v : v));
+    html += `<div class="card hi"><h3>由变卦看走向</h3>
+      <p class="gn">${bx.name}</p><p>${bx.data.j}</p></div>`;
+  } else {
+    html += `<div class="card"><h3>静卦</h3><p>六爻皆静，事态稳定。以本卦卦辞断之，不必再问变化。</p></div>`;
+  }
+  html += `<div class="end">一卦既出，仅供参考 · 事在人为</div>`;
+  $("#jieOut").innerHTML = html;
+}
+
+$("#btn").addEventListener("click", divinate);
+$("#jie").addEventListener("click", renderJie);
+
+</script>
+</body>
+</html>

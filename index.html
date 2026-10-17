@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>周易摇卦</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"PingFang SC","Microsoft YaHei",sans-serif;background:#0f1420;color:#e8e4d8;min-height:100vh;padding:24px 16px 48px}
+.wrap{max-width:560px;margin:0 auto}
+h1{text-align:center;font-size:26px;letter-spacing:4px;margin-bottom:4px;color:#c9a86a}
+.sub{text-align:center;font-size:13px;color:#8a8a8a;letter-spacing:2px;margin-bottom:24px}
+.ask{background:rgba(201,168,106,.08);border:1px solid rgba(201,168,106,.2);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:14px;color:#d4c49a;line-height:1.7}
+.qbox{margin-bottom:16px}
+.qbox input{width:100%;padding:14px 18px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#e8e4d8;font-size:15px;outline:none;transition:border .2s}
+.qbox input:focus{border-color:rgba(201,168,106,.5)}
+.qbox input::placeholder{color:#666}
+#btn{display:block;width:100%;padding:16px;background:linear-gradient(135deg,#c9a86a,#a8843c);color:#1a1a1a;font-size:18px;font-weight:700;letter-spacing:3px;border:none;border-radius:12px;cursor:pointer;transition:transform .15s,opacity .2s;box-shadow:0 4px 20px rgba(201,168,106,.3)}
+#btn:active{transform:scale(.97)}
+#btn:disabled{opacity:.5;pointer-events:none}
+#jie{display:none;width:100%;padding:16px;background:linear-gradient(135deg,#5c7a6e,#3d5a4e);color:#e8e4d8;font-size:18px;font-weight:700;letter-spacing:3px;border:none;border-radius:12px;cursor:pointer;transition:transform .15s,opacity .2s;box-shadow:0 4px 20px rgba(92,122,110,.3);margin:20px 0}
+#jie.show{display:block}
+#jie:active{transform:scale(.97)}
+#coins{margin:20px auto 0;text-align:center;opacity:0;transition:opacity .3s}
+#coins.show{opacity:1}
+.coinrow{display:flex;gap:10px;justify-content:center;margin-bottom:8px}
+.coin{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.coin.b{background:linear-gradient(135deg,#c9a86a,#a8843c);color:#1a1a1a}
+.coin.z{background:rgba(255,255,255,.12);color:#aaa;border:1px solid rgba(255,255,255,.15)}
+.cointxt{font-size:13px;color:#8a8a8a;min-height:20px}
+#out{margin-top:24px}
+.panels{display:flex;gap:12px;align-items:center;justify-content:center;margin-bottom:20px}
+.panel{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px 12px;flex:1;max-width:140px;text-align:center}
+.ptitle{font-size:12px;color:#8a8a8a;letter-spacing:2px;margin-bottom:10px}
+.gua{display:flex;flex-direction:column-reverse;gap:3px;align-items:center;margin-bottom:10px}
+.yao{display:flex;gap:2px}
+.yao i{display:inline-block;width:32px;height:9px;border-radius:1px;background:#d4c49a}
+.yao.mv i{background:#c9a86a;box-shadow:0 0 6px rgba(201,168,106,.5)}
+.yao.sm i{width:26px;height:7px}
+.gname{font-size:18px;font-weight:700;color:#c9a86a;margin-bottom:4px}
+.gnote{font-size:12px;color:#8a8a8a}
+.arrow{font-size:20px;color:#555}
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px 18px;margin-bottom:12px}
+.card h3{font-size:13px;color:#c9a86a;letter-spacing:2px;margin-bottom:8px}
+.card p{font-size:14px;line-height:1.8;color:#d4d0c4}
+.card .xiang{color:#a89e8a;font-style:italic}
+.card.hi{border-color:rgba(201,168,106,.3);background:rgba(201,168,106,.06)}
+.mvp{font-size:13px;margin-bottom:6px;color:#c4b898}
+.gn{font-size:15px;font-weight:700;color:#c9a86a;margin-bottom:6px}
+.end{text-align:center;font-size:12px;color:#555;margin-top:24px;letter-spacing:1px}
+@media(max-width:480px){
+  .panels{flex-direction:column;gap:8px}
+  .panel{max-width:100%}
+  .arrow{transform:rotate(90deg)}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>周易摇卦</h1>
+  <div class="sub">三枚铜钱 · 六爻成卦</div>
+
+  <div class="qbox">
+    <input id="q" type="text" placeholder="心中默念所问之事（可选）" maxlength="50">
+  </div>
+
+  <button id="btn">摇 卦</button>
+
+  <div id="coins"></div>
+  <div id="out"></div>
+
+  <button id="jie">解 卦</button>
+  <div id="jieOut"></div>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
