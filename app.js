@@ -52,6 +52,17 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 // 当前卦的状态（摇完保存，解卦时用）
 let cur = null;
+ 
+ function changedLines(state = cur) {
+   if (!state) return null;
+   if (!state.moves.length) return [...state.lines];
+   const movesSet = new Set(state.moves.map(m => m.pos));
+   return state.lines.map((v, i) => movesSet.has(i) ? 1 - v : v);
+ }
+ 
+ function changedHexInfo(state = cur) {
+   return hexInfo(changedLines(state));
+ }
 
 function yaoHtml(yang, moving, small) {
   const h = small ? 7 : 11;
@@ -66,7 +77,9 @@ async function divinate() {
   btn.disabled = true;
   jie.classList.remove("show");
   out.innerHTML = "";
+  $("#jieOut").innerHTML = "";
   cur = null;
+  coins.classList.add("show");
   const lines = [], moves = [], all = [];
   for (let i = 0; i < 6; i++) {
     const t = toss();
@@ -76,7 +89,6 @@ async function divinate() {
     coins.innerHTML = `<div class="coinrow">${t.coins.map(b =>
       `<span class="coin ${b ? "b" : "z"}">${b ? "背" : "字"}</span>`).join("")}</div>
       <div class="cointxt">第 ${i + 1} 爻 · ${["老阴","少阳","少阴","老阳"][t.val === 6 ? 0 : t.val === 7 ? 1 : t.val === 8 ? 2 : 3]}${t.moving ? "（动）" : ""}</div>`;
-    coins.classList.add("show");
     await sleep(260);
   }
   cur = { all, lines, moves, question };
@@ -96,7 +108,7 @@ function renderGua() {
     <div class="gname">${ben.name}</div>
   </div>`;
   if (hasMove) {
-    const bx = hexInfo(cur.lines.map((v, i) => cur.moves.some(m => m.pos === i) ? 1 - v : v));
+    const bx = changedHexInfo(cur);
     html += `<div class="arrow">→</div>`;
     html += `<div class="panel">
       <div class="ptitle">变卦 · 趋势</div>
@@ -124,7 +136,7 @@ function renderJie() {
   if (hasMove) {
     html += `<div class="card"><h3>动爻 · ${cur.moves.length} 爻动</h3>` +
       cur.moves.map(m => `<p class="mvp">第 ${m.pos + 1} 爻（${"初二三四五上"[m.pos]}爻）：${YAO_TIP[m.pos]}</p>`).join("") + `</div>`;
-    const bx = hexInfo(cur.lines.map((v, i) => cur.moves.some(m => m.pos === i) ? 1 - v : v));
+    const bx = changedHexInfo(cur);
     html += `<div class="card hi"><h3>由变卦看走向</h3>
       <p class="gn">${bx.name}</p><p>${bx.data.j}</p></div>`;
   } else {

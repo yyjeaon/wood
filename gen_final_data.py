@@ -62,6 +62,6 @@ for no, name, u, l, s, x in GUA64:
     lines.append(f'{{q:"{name}",s:"{s}",x:"{x}",j:"{j}"}},')
 lines.append("];")
 
-with open("/var/minis/workspace/yijing/data.js", "w") as f:
+with open("./data.js", "w") as f:
     f.write("\n".join(lines))
 print(f"data.js 权威版生成完毕，共 {len(GUA64)} 卦")

@@ -1,17 +1,29 @@
 #!/usr/bin/env python3
 # 把 index.html + data.js + app.js 打包为单个 standalone.html
-with open('/var/minis/workspace/yijing/index.html') as f:
-    html = f.read()
-with open('/var/minis/workspace/yijing/data.js') as f:
-    data = f.read()
-with open('/var/minis/workspace/yijing/app.js') as f:
-    app = f.read()
+import re
+from pathlib import Path
 
-# 替换 script src 为内联
-html = html.replace('<script src="data.js"></script>', f'<script>\n{data}\n</script>')
-html = html.replace('<script src="app.js"></script>', f'<script>\n{app}\n</script>')
+ROOT = Path(__file__).parent
+HTML = ROOT / "index.html"
+DATA = ROOT / "data.js"
+APP = ROOT / "app.js"
+OUT = ROOT / "dist" / "周易摇卦.html"
 
-target = '/sdcard/Download/摇卦/周易摇卦_单文件版.html'
-with open(target, 'w') as f:
-    f.write(html)
-print(f'单文件版已生成: {target}')
+def escape_script(text: str) -> str:
+    # 避免内联脚本被 </script> 提前终止
+    return text.replace("</script>", "<\\/script>")
+
+def main():
+    html = HTML.read_text(encoding="utf-8")
+    data = escape_script(DATA.read_text(encoding="utf-8"))
+    app = escape_script(APP.read_text(encoding="utf-8"))
+
+    html = html.replace('<script src="data.js"></script>', f'<script>\n{data}\n</script>')
+    html = html.replace('<script src="app.js"></script>', f'<script>\n{app}\n</script>')
+
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    OUT.write_text(html, encoding="utf-8")
+    print(f"单文件版已生成: {OUT}")
+
+if __name__ == "__main__":
+    main()

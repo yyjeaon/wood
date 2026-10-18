@@ -93,6 +93,6 @@ for lower in ORDER:
     lines.append(f"  {lower}: [{vals}],")
 lines.append("};")
 
-with open("/var/minis/workspace/yijing/raw_verified.js", "w") as f:
+with open("./raw_verified.js", "w") as f:
     f.write("\n".join(lines))
 print("权威 RAW 表生成完毕，写入 raw_verified.js")
