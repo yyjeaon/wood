@@ -81,18 +81,3 @@ for no, name, u, l, _, _ in GUA64:
     seen[key] = f"{name}({no})"
 
 print(f"唯一性: {len(seen)}/64")
-
-# 构建 RAW 表
-RAW = {lower: [0]*8 for lower in ORDER}
-for no, name, u, l, _, _ in GUA64:
-    RAW[l][ORDER.index(u)] = no
-
-lines = ["const RAW = {"]
-for lower in ORDER:
-    vals = ", ".join(str(n) for n in RAW[lower])
-    lines.append(f"  {lower}: [{vals}],")
-lines.append("};")
-
-with open("./raw_verified.js", "w") as f:
-    f.write("\n".join(lines))
-print("权威 RAW 表生成完毕，写入 raw_verified.js")

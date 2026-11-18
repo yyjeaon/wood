@@ -1,17 +1,12 @@
 // 最终权威全量核验：从八卦定义推导 64 卦查表，确保 100% 正确
 const fs = require('fs');
 
-const ORDER = ['乾','兑','离','震','巽','坎','艮','坤'];
-const RAW = {
-  乾: [1, 43, 14, 34, 9, 5, 26, 11],
-  兑: [10, 58, 38, 54, 61, 60, 41, 19],
-  离: [13, 49, 30, 55, 37, 63, 22, 36],
-  震: [25, 17, 21, 51, 42, 3, 27, 24],
-  巽: [44, 28, 50, 32, 57, 48, 18, 46],
-  坎: [6, 47, 64, 40, 59, 29, 4, 7],
-  艮: [33, 31, 56, 62, 53, 39, 52, 15],
-  坤: [12, 45, 35, 16, 20, 8, 23, 2],
-};
+const vm = require('vm');
+
+// 直接核验 app.js 中实际使用的查表
+const ctx = vm.createContext({ console, document: { querySelector: () => ({ addEventListener: () => {} }) } });
+vm.runInContext(fs.readFileSync('data.js', 'utf8') + '\n' + fs.readFileSync('app.js', 'utf8') + '\nthis.RAW = RAW; this.ORDER = ORDER;', ctx);
+const { RAW, ORDER } = ctx;
 
 // 八卦标准二进制编码（初爻在下，1=阳 0=阴）
 // 阳爻在下为震[1,0,0]，阳爻在中为坎[0,1,0]，阳爻在上为艮[0,0,1]

@@ -18,8 +18,10 @@ def main():
     data = escape_script(DATA.read_text(encoding="utf-8"))
     app = escape_script(APP.read_text(encoding="utf-8"))
 
-    html = html.replace('<script src="data.js"></script>', f'<script>\n{data}\n</script>')
-    html = html.replace('<script src="app.js"></script>', f'<script>\n{app}\n</script>')
+    for tag, code in (('<script src="data.js"></script>', data), ('<script src="app.js"></script>', app)):
+        if tag not in html:
+            raise SystemExit(f"index.html 中找不到 {tag}，无法内联")
+        html = html.replace(tag, f'<script>\n{code}\n</script>')
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(html, encoding="utf-8")
