@@ -52,17 +52,27 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 // 当前卦的状态（摇完保存，解卦时用）
 let cur = null;
- 
- function changedLines(state = cur) {
-   if (!state) return null;
-   if (!state.moves.length) return [...state.lines];
-   const movesSet = new Set(state.moves.map(m => m.pos));
-   return state.lines.map((v, i) => movesSet.has(i) ? 1 - v : v);
- }
- 
- function changedHexInfo(state = cur) {
-   return hexInfo(changedLines(state));
- }
+
+// 本卦按摇出的阴阳记录（动爻未变）
+function buildState(all, question = "") {
+  const lines = all.map(t => (t.yang ? 1 : 0));
+  const moves = all.flatMap((t, i) => (t.moving ? [{ pos: i, was: t.yang }] : []));
+  return { all, lines, moves, question };
+}
+
+function changedLines(state = cur) {
+  if (!state) return null;
+  const movesSet = new Set(state.moves.map(m => m.pos));
+  return state.lines.map((v, i) => movesSet.has(i) ? 1 - v : v);
+}
+
+function changedHexInfo(state = cur) {
+  return hexInfo(changedLines(state));
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
 
 function yaoHtml(yang, moving, small) {
   const h = small ? 7 : 11;
@@ -80,18 +90,16 @@ async function divinate() {
   $("#jieOut").innerHTML = "";
   cur = null;
   coins.classList.add("show");
-  const lines = [], moves = [], all = [];
+  const all = [];
   for (let i = 0; i < 6; i++) {
     const t = toss();
     all.push(t);
-    lines.push(t.moving ? 1 - (t.yang ? 1 : 0) : (t.yang ? 1 : 0));
-    if (t.moving) moves.push({ pos: i, was: t.yang });
     coins.innerHTML = `<div class="coinrow">${t.coins.map(b =>
       `<span class="coin ${b ? "b" : "z"}">${b ? "背" : "字"}</span>`).join("")}</div>
       <div class="cointxt">第 ${i + 1} 爻 · ${["老阴","少阳","少阴","老阳"][t.val === 6 ? 0 : t.val === 7 ? 1 : t.val === 8 ? 2 : 3]}${t.moving ? "（动）" : ""}</div>`;
     await sleep(260);
   }
-  cur = { all, lines, moves, question };
+  cur = buildState(all, question);
   renderGua();
   btn.disabled = false;
 }
@@ -99,7 +107,7 @@ async function divinate() {
 function renderGua() {
   const ben = hexInfo(cur.lines);
   const hasMove = cur.moves.length > 0;
-  let html = cur.question ? `<div class="ask">所问：${cur.question}</div>` : "";
+  let html = cur.question ? `<div class="ask">所问：${escapeHtml(cur.question)}</div>` : "";
   html += `<div class="panels">`;
   html += `<div class="panel">
     <div class="ptitle">本卦 · 现状</div>
@@ -108,12 +116,13 @@ function renderGua() {
     <div class="gname">${ben.name}</div>
   </div>`;
   if (hasMove) {
-    const bx = changedHexInfo(cur);
+    const bl = changedLines(cur);
+    const bx = hexInfo(bl);
     html += `<div class="arrow">→</div>`;
     html += `<div class="panel">
       <div class="ptitle">变卦 · 趋势</div>
       <div class="gua">${[5, 4, 3, 2, 1, 0].map(i =>
-        yaoHtml(cur.lines[i] === 1, false, true)).join("")}</div>
+        yaoHtml(bl[i] === 1, false, true)).join("")}</div>
       <div class="gname">${bx.name}</div>
     </div>`;
   }
